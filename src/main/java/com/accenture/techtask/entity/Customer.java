@@ -2,10 +2,11 @@ package com.accenture.techtask.entity;
 
 import com.neovisionaries.i18n.CountryCode;
 import javax.persistence.*;
+import java.io.Serializable;
 
 @Entity
 @Table(name = "acc_customer")
-public class Customer {
+public class Customer implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;

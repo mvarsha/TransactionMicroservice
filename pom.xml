@@ -48,6 +48,11 @@
 			<artifactId>nv-i18n</artifactId>
 			<version>1.29</version>
 		</dependency>
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-validator</artifactId>
+			<version>6.0.10.Final</version>
+		</dependency>
 	</dependencies>
 
 	<build>

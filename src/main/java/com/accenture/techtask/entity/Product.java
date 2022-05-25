@@ -1,14 +1,11 @@
 package com.accenture.techtask.entity;
 
 import javax.persistence.*;
-
-enum ProductStatus {
-    ACTIVE, INACTIVE
-}
+import java.io.Serializable;
 
 @Entity
 @Table(name = "acc_product")
-public class Product {
+public class Product implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;

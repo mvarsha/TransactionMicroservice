@@ -1,22 +1,38 @@
 package com.accenture.techtask.entity;
 
+import com.accenture.techtask.validator.OnAfterDateConstraint;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.sun.istack.NotNull;
+
 import javax.persistence.*;
+import java.io.Serializable;
+import java.time.Instant;
 import java.util.Date;
 
 @Entity
 @Table(name = "acc_transaction")
-public class Transaction {
+public class Transaction implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+    @NotNull
     @Column(name="customer_id")
     private Long customerId;
+    @NotNull
     @Column(name="quantity")
     private Integer quantity;
+    @NotNull
     @Column(name="product_code")
     private String productCode;
+    @NotNull
     @Column(name="transaction_time")
+    @OnAfterDateConstraint
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
     private Date transactionTime;
+
+    public Boolean validate() {
+        return transactionTime.after(Date.from(Instant.now()));
+    }
 
     public Long getId() {
         return id;
