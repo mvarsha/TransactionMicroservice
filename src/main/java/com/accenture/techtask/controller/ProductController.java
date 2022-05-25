@@ -2,17 +2,15 @@ package com.accenture.techtask.controller;
 
 import com.accenture.techtask.entity.Product;
 import com.accenture.techtask.entity.ProductStatus;
-import com.accenture.techtask.entity.Transaction;
 import com.accenture.techtask.service.ProductService;
-import com.accenture.techtask.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.Valid;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @RestController
 public class ProductController {

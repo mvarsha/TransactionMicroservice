@@ -1,13 +1,14 @@
 package com.accenture.techtask.controller;
 
-import com.accenture.techtask.entity.Customer;
 import com.accenture.techtask.entity.Product;
-import com.accenture.techtask.entity.ProductStatus;
 import com.accenture.techtask.entity.Transaction;
 import com.accenture.techtask.service.TransactionService;
-import com.neovisionaries.i18n.CountryCode;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
@@ -29,20 +30,22 @@ public class TransactionController {
     TransactionService transactionService;
     RestTemplate restTemplate = new RestTemplate();
     Map<String, Product> productMap;
-    public static final String baseURL = "http://localhost:8080/";
+    @Value("${server.port}")
+    private String serverPort;
+    public static final String baseURL = "http://localhost:";
     public static final int MAX_COST = 5000;
     public static final Logger logger = Logger.getLogger(TransactionController.class.getName());
 
     /**
      * Add a list of transactions
      * @param transactions List of transactions in JSON
-     * @return HttpStatus.CREATED or HttpStatus.NOT_FOUND
+     * @return HttpStatus.CREATED or HttpStatus.BAD_REQUEST
      */
     @PostMapping("/transaction/add")
     public ResponseEntity<?> addTransactions(@Valid @RequestBody List<Transaction> transactions) {
         try {
             if(transactions.isEmpty()) {
-                throw new InvalidTransactionException(new ErrorResponse("e-003", "No transactions to process"));
+                throw new InvalidTransactionException(new ErrorResponse("e-004", "No transactions to process"));
             }
 
             List<Transaction> validTransactions = filterValidTransactions(transactions);
@@ -52,9 +55,9 @@ public class TransactionController {
             transactionService.saveTransactions(validTransactions);
             return new ResponseEntity<>(HttpStatus.CREATED);
         } catch (NoSuchElementException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         } catch (InvalidTransactionException e) {
-            return new ResponseEntity<ErrorResponse>(new ErrorResponse(e.getCode(), e.getMessage()), HttpStatus.NOT_FOUND);
+            return new ResponseEntity<ErrorResponse>(new ErrorResponse(e.getCode(), e.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -66,7 +69,7 @@ public class TransactionController {
             long cost = calculateSum(validTransactions, false);
             return new ResponseEntity<Long>(cost, HttpStatus.OK);
         } catch (InvalidTransactionException e) {
-            return new ResponseEntity<ErrorResponse>(new ErrorResponse(e.getCode(), e.getMessage()), HttpStatus.NOT_FOUND);
+            return new ResponseEntity<ErrorResponse>(new ErrorResponse(e.getCode(), e.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -78,7 +81,7 @@ public class TransactionController {
             long cost = calculateSum(validTransactions, false);
             return new ResponseEntity<Long>(cost, HttpStatus.OK);
         } catch (InvalidTransactionException e) {
-            return new ResponseEntity<ErrorResponse>(new ErrorResponse(e.getCode(), e.getMessage()), HttpStatus.NOT_FOUND);
+            return new ResponseEntity<ErrorResponse>(new ErrorResponse(e.getCode(), e.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -90,7 +93,17 @@ public class TransactionController {
             List<Transaction> validTransactions = filterValidTransactions(transactions);
             return new ResponseEntity<Integer>(validTransactions.size(), HttpStatus.OK);
         } catch (InvalidTransactionException e) {
-            return new ResponseEntity<ErrorResponse>(new ErrorResponse(e.getCode(), e.getMessage()), HttpStatus.NOT_FOUND);
+            return new ResponseEntity<ErrorResponse>(new ErrorResponse(e.getCode(), e.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("/transactions")
+    public ResponseEntity<?> allTransactions() {
+        try {
+            List<Transaction> transactions = transactionService.findAll();
+            return new ResponseEntity<List<Transaction>>(transactions, HttpStatus.OK);
+        } catch (InvalidTransactionException e) {
+            return new ResponseEntity<ErrorResponse>(new ErrorResponse(e.getCode(), e.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -110,14 +123,15 @@ public class TransactionController {
 
         if(validTransactions.isEmpty()) {
             throw new InvalidTransactionException(new ErrorResponse
-                    ("e-001", "No valid transactions"));
+                    ("e-002", "No valid transactions"));
         }
 
         return validTransactions;
     }
 
     private List<Product> findActiveProductsByStatusOrderByCostDesc() {
-        ResponseEntity<Product[]> responseEntity = restTemplate.getForEntity(baseURL + "products?status=ACTIVE", Product[].class);
+        ResponseEntity<Product[]> responseEntity = restTemplate.getForEntity
+                (baseURL + serverPort + "/products?status=ACTIVE", Product[].class);
         if (responseEntity.getBody() != null) {
             return Arrays.stream(responseEntity.getBody()).toList();
         } else {
@@ -127,7 +141,7 @@ public class TransactionController {
     }
 
     private List<Long> findAllCustomerIds() {
-        ResponseEntity<Long[]> responseEntity = restTemplate.getForEntity(baseURL + "customer/ids", Long[].class);
+        ResponseEntity<Long[]> responseEntity = restTemplate.getForEntity(baseURL + serverPort + "/customer/ids", Long[].class);
         if (responseEntity.getBody() != null) {
             return Arrays.stream(responseEntity.getBody()).toList();
         } else {
@@ -138,7 +152,7 @@ public class TransactionController {
 
     private List<Long> findCustomerIdsByCountry(String countryCode) {
         ResponseEntity<Long[]> responseEntity =
-                restTemplate.getForEntity(baseURL + "customer/ids/" + countryCode, Long[].class);
+                restTemplate.getForEntity(baseURL + serverPort + "/customer/ids/" + countryCode, Long[].class);
         if (responseEntity.getBody() != null) {
             return Arrays.stream(responseEntity.getBody()).toList();
         } else {
@@ -164,7 +178,7 @@ public class TransactionController {
             }
         }
         if(!isTotalCostValid) {
-            throw new InvalidTransactionException(new ErrorResponse("e-002", "Cost exceeds " + MAX_COST));
+            throw new InvalidTransactionException(new ErrorResponse("e-003", "Cost exceeds " + MAX_COST));
         }
     }
 
@@ -202,7 +216,7 @@ public class TransactionController {
             Set<ConstraintViolation<?>> constraintViolations = ((ConstraintViolationException) cause).getConstraintViolations();
             if(!constraintViolations.isEmpty()) {
                 ErrorResponse errorResponse = new ErrorResponse("e-001", constraintViolations.iterator().next().getMessage());
-                return new ResponseEntity<ErrorResponse>(errorResponse, HttpStatus.NOT_FOUND);
+                return new ResponseEntity<ErrorResponse>(errorResponse, HttpStatus.BAD_REQUEST);
             }
         }
         return null;

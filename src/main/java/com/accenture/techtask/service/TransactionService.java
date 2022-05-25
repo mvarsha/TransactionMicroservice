@@ -26,4 +26,8 @@ public class TransactionService {
     public List<Transaction> findByProductCode(String productCode) {
         return transactionRepository.findByProductCode(productCode);
     }
+
+    public List<Transaction> findAll() {
+        return transactionRepository.findAll();
+    }
 }
