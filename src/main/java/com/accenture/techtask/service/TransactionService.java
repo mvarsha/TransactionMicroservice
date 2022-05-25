@@ -14,4 +14,16 @@ public class TransactionService {
     public void saveTransactions(List<Transaction> transactions) {
         transactionRepository.saveAll(transactions);
     }
+
+    public List<Transaction> findByCustomerId(Long customerId) {
+        return transactionRepository.findByCustomerId(customerId);
+    }
+
+    public List<Transaction> findByCustomerIds(List<Long> customerIds) {
+        return transactionRepository.findByCustomerIdIn(customerIds);
+    }
+
+    public List<Transaction> findByProductCode(String productCode) {
+        return transactionRepository.findByProductCode(productCode);
+    }
 }

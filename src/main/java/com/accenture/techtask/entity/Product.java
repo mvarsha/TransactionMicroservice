@@ -12,7 +12,7 @@ public class Product implements Serializable {
     @Column(unique = true, name = "code")
     private String code;
     @Column(name = "cost")
-    private Integer cost;
+    private long cost;
     @Column(name = "status")
     private ProductStatus status;
 
@@ -32,11 +32,11 @@ public class Product implements Serializable {
         this.code = code;
     }
 
-    public Integer getCost() {
+    public long getCost() {
         return cost;
     }
 
-    public void setCost(Integer cost) {
+    public void setCost(long cost) {
         this.cost = cost;
     }
 
