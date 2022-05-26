@@ -3,6 +3,7 @@ package com.accenture.techtask.controller;
 import com.accenture.techtask.entity.Product;
 import com.accenture.techtask.entity.Transaction;
 import com.accenture.techtask.service.TransactionService;
+import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -86,7 +87,8 @@ public class TransactionController {
     }
 
     @GetMapping("/transaction/count")
-    public ResponseEntity<?> transactionsCountByCountry(@RequestParam(value = "country") String countryCode) {
+    public ResponseEntity<?> transactionsCountByCountry(@ApiParam(value="Use https://en.wikipedia.org/wiki/ISO_3166-1 country code",
+            name="country", example = "AU") @RequestParam(value = "country") String countryCode) {
         try {
             List<Long> customerIds = findCustomerIdsByCountry(countryCode);
             List<Transaction> transactions = transactionService.findByCustomerIds(customerIds);
