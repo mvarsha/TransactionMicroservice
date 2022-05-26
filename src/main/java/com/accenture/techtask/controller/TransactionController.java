@@ -3,20 +3,27 @@ package com.accenture.techtask.controller;
 import com.accenture.techtask.entity.Product;
 import com.accenture.techtask.entity.Transaction;
 import com.accenture.techtask.service.TransactionService;
+import com.fasterxml.jackson.core.exc.StreamReadException;
+import com.fasterxml.jackson.databind.DatabindException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Valid;
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -38,10 +45,11 @@ public class TransactionController {
 
     /**
      * Add a list of transactions
-     * @param transactions List of transactions in JSON
+     * @param transactions List of transactions
      * @return HttpStatus.CREATED or HttpStatus.BAD_REQUEST
      */
-    @PostMapping("/transaction/add")
+    @PostMapping(value = "/transaction/add", consumes = { MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE },
+            produces= MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> addTransactions(@Valid @RequestBody List<Transaction> transactions) {
         try {
             if(transactions.isEmpty()) {
